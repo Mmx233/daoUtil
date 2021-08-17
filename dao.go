@@ -41,11 +41,9 @@ func DefaultExist(a interface{}) bool {
 }
 
 func DefaultExistTx(tx *gorm.DB, a interface{}) bool {
-	var t struct {
-		ID uint
-	}
-	tx.Model(a).Where(a).Find(&t)
-	return t.ID != 0
+	var t bool
+	tx.Model(a).Select("1").Where(a).Find(&t)
+	return t
 }
 
 func DefaultGet(a interface{}) error {
