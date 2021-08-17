@@ -84,6 +84,15 @@ func (ServicePackage) Begin() ServicePackage {
 	}
 }
 
+func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
+	if tx == nil {
+		tx = db
+	}
+	return ServicePackage{
+		Tx: tx,
+	}
+}
+
 func (a *ServicePackage) RollBack() {
 	if !a.committed {
 		a.committed = true
