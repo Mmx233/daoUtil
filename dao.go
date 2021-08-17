@@ -78,6 +78,12 @@ type ServicePackage struct {
 	committed bool
 }
 
+func (ServicePackage) Begin() ServicePackage {
+	return ServicePackage{
+		tx: Begin(),
+	}
+}
+
 func (a *ServicePackage) RollBack() {
 	if !a.committed {
 		a.committed = true
