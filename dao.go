@@ -74,26 +74,26 @@ func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 }
 
 type ServicePackage struct {
-	tx        *gorm.DB
+	Tx        *gorm.DB
 	committed bool
 }
 
 func (ServicePackage) Begin() ServicePackage {
 	return ServicePackage{
-		tx: Begin(),
+		Tx: Begin(),
 	}
 }
 
 func (a *ServicePackage) RollBack() {
 	if !a.committed {
 		a.committed = true
-		a.tx.Rollback()
+		a.Tx.Rollback()
 	}
 }
 
 func (a *ServicePackage) Commit() {
 	if !a.committed {
 		a.committed = true
-		a.tx.Commit()
+		a.Tx.Commit()
 	}
 }
