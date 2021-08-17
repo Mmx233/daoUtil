@@ -72,3 +72,22 @@ func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 	var n int64
 	return n, tx.Where(t).Count(&n).Error
 }
+
+type ServicePackage struct {
+	tx        *gorm.DB
+	committed bool
+}
+
+func (a *ServicePackage) RollBack() {
+	if !a.committed {
+		a.committed = true
+		a.tx.Rollback()
+	}
+}
+
+func (a *ServicePackage) Commit() {
+	if !a.committed {
+		a.committed = true
+		a.tx.Commit()
+	}
+}
