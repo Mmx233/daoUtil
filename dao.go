@@ -68,7 +68,7 @@ func DefaultCounter(t interface{}) (int64, error) {
 
 func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 	var n int64
-	return n, tx.Where(t).Count(&n).Error
+	return n, tx.Model(t).Where(t).Count(&n).Error
 }
 
 type ServicePackage struct {
