@@ -1,19 +1,30 @@
 package daoUtil
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"sync"
+)
 
-var db *gorm.DB
+var lock = &sync.Mutex{}
 
-func Init(DB *gorm.DB) {
-	db = DB
+type Config struct {
+	DB *gorm.DB
+	//强制非nil事务串行化
+	Serializable bool
+}
+
+var c *Config
+
+func Init(config *Config) {
+	c = config
 }
 
 func Begin() *gorm.DB {
-	return db.Begin()
+	return c.DB.Begin()
 }
 
 func DefaultInsert(a interface{}) error {
-	return DefaultInsertTx(db, a)
+	return DefaultInsertTx(c.DB, a)
 }
 
 func DefaultInsertTx(tx *gorm.DB, a interface{}) error {
@@ -21,7 +32,7 @@ func DefaultInsertTx(tx *gorm.DB, a interface{}) error {
 }
 
 func DefaultDelete(a interface{}) error {
-	return DefaultDeleteTx(db, a)
+	return DefaultDeleteTx(c.DB, a)
 }
 
 func DefaultDeleteTx(tx *gorm.DB, a interface{}) error {
@@ -29,7 +40,7 @@ func DefaultDeleteTx(tx *gorm.DB, a interface{}) error {
 }
 
 func DefaultFind(a interface{}) error {
-	return DefaultFindTx(db, a)
+	return DefaultFindTx(c.DB, a)
 }
 
 func DefaultFindTx(tx *gorm.DB, a interface{}) error {
@@ -37,7 +48,7 @@ func DefaultFindTx(tx *gorm.DB, a interface{}) error {
 }
 
 func DefaultExist(a interface{}) bool {
-	return DefaultExistTx(db, a)
+	return DefaultExistTx(c.DB, a)
 }
 
 func DefaultExistTx(tx *gorm.DB, a interface{}) bool {
@@ -47,7 +58,7 @@ func DefaultExistTx(tx *gorm.DB, a interface{}) bool {
 }
 
 func DefaultGet(a interface{}) error {
-	return DefaultGetTx(db, a)
+	return DefaultGetTx(c.DB, a)
 }
 
 func DefaultGetTx(tx *gorm.DB, a interface{}) error {
@@ -55,7 +66,7 @@ func DefaultGetTx(tx *gorm.DB, a interface{}) error {
 }
 
 func DefaultGetWhitQuery(a interface{}, t interface{}) error {
-	return DefaultGetWhitQueryTx(db, a, t)
+	return DefaultGetWhitQueryTx(c.DB, a, t)
 }
 
 func DefaultGetWhitQueryTx(tx *gorm.DB, a interface{}, t interface{}) error {
@@ -63,7 +74,7 @@ func DefaultGetWhitQueryTx(tx *gorm.DB, a interface{}, t interface{}) error {
 }
 
 func DefaultCounter(t interface{}) (int64, error) {
-	return DefaultCounterTx(db, t)
+	return DefaultCounterTx(c.DB, t)
 }
 
 func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
@@ -74,17 +85,22 @@ func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 type ServicePackage struct {
 	Tx        *gorm.DB
 	committed bool
+	locking   bool
 }
 
 func (ServicePackage) Begin() ServicePackage {
+	if c.Serializable {
+		lock.Lock()
+	}
 	return ServicePackage{
-		Tx: Begin(),
+		Tx:      Begin(),
+		locking: c.Serializable,
 	}
 }
 
 func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
 	if tx == nil {
-		tx = db
+		tx = c.DB
 	}
 	return ServicePackage{
 		Tx: tx,
@@ -95,6 +111,9 @@ func (a *ServicePackage) RollBack() {
 	if !a.committed {
 		a.committed = true
 		a.Tx.Rollback()
+		if a.locking {
+			lock.Unlock()
+		}
 	}
 }
 
@@ -102,5 +121,8 @@ func (a *ServicePackage) Commit() {
 	if !a.committed {
 		a.committed = true
 		a.Tx.Commit()
+		if a.locking {
+			lock.Unlock()
+		}
 	}
 }
