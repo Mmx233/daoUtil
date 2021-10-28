@@ -1,10 +1,11 @@
 package daoUtil
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type ServicePackage struct {
-	Tx      *gorm.DB
-	locking bool
+	Tx *gorm.DB
 }
 
 func (ServicePackage) Begin() ServicePackage {
