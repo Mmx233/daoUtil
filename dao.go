@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-var lock = &sync.Mutex{}
+var lock sync.Mutex
 
 type Config struct {
 	DB *gorm.DB
@@ -83,9 +83,8 @@ func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 }
 
 type ServicePackage struct {
-	Tx        *gorm.DB
-	committed bool
-	locking   bool
+	Tx      *gorm.DB
+	locking bool
 }
 
 func (ServicePackage) Begin() ServicePackage {
@@ -107,9 +106,18 @@ func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
 	}
 }
 
+func (a *ServicePackage) committed() bool {
+	ed, ok := a.Tx.Get("committed")
+	return ok && ed.(bool) == true
+}
+
+func (a *ServicePackage) mark() {
+	a.Tx.Set("committed", true)
+}
+
 func (a *ServicePackage) RollBack() {
-	if !a.committed {
-		a.committed = true
+	if !a.committed() {
+		a.mark()
 		a.Tx.Rollback()
 		if a.locking {
 			lock.Unlock()
@@ -118,8 +126,8 @@ func (a *ServicePackage) RollBack() {
 }
 
 func (a *ServicePackage) Commit() {
-	if !a.committed {
-		a.committed = true
+	if !a.committed() {
+		a.mark()
 		a.Tx.Commit()
 		if a.locking {
 			lock.Unlock()
