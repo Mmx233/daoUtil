@@ -95,7 +95,7 @@ func (ServicePackage) Begin(a interface{}, key string) ServicePackage {
 		name = reflect.TypeOf(a).Elem().Name() + "-" + key
 	}
 	tx := Begin()
-	tx.Set("name", name)
+	tx.InstanceSet("name", name)
 	return ServicePackage{
 		Tx: tx,
 	}
@@ -111,16 +111,16 @@ func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
 }
 
 func (a *ServicePackage) committed() bool {
-	ed, ok := a.Tx.Get("committed")
+	ed, ok := a.Tx.InstanceGet("committed")
 	return ok && ed.(bool) == true
 }
 
 func (a *ServicePackage) mark() {
-	a.Tx.Set("committed", true)
+	a.Tx.InstanceSet("committed", true)
 }
 
 func (a *ServicePackage) name() string {
-	o, _ := a.Tx.Get("name")
+	o, _ := a.Tx.InstanceGet("name")
 	return o.(string)
 }
 
