@@ -86,7 +86,9 @@ func (a *serviceLock) UnLock(n string) {
 }
 
 type ServicePackage struct {
-	Tx *gorm.DB
+	Tx        *gorm.DB
+	name      string
+	committed bool
 }
 
 func (ServicePackage) Begin(a interface{}, key string) ServicePackage {
@@ -95,9 +97,9 @@ func (ServicePackage) Begin(a interface{}, key string) ServicePackage {
 		name = reflect.TypeOf(a).Elem().Name() + "-" + key
 	}
 	tx := Begin()
-	tx.InstanceSet("name", name)
 	return ServicePackage{
-		Tx: tx,
+		Tx:   tx,
+		name: name,
 	}
 }
 
@@ -110,34 +112,20 @@ func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
 	}
 }
 
-func (a *ServicePackage) committed() bool {
-	ed, ok := a.Tx.InstanceGet("committed")
-	return ok && ed.(bool) == true
-}
-
-func (a *ServicePackage) mark() {
-	a.Tx.InstanceSet("committed", true)
-}
-
-func (a *ServicePackage) name() string {
-	o, _ := a.Tx.InstanceGet("name")
-	return o.(string)
-}
-
 // RollBack 回滚，使用行锁时必须defer
 func (a *ServicePackage) RollBack() {
-	if n := a.name(); n != "" {
-		serviceLocks.UnLock(n)
+	if a.name != "" {
+		serviceLocks.UnLock(a.name)
 	}
-	if !a.committed() {
-		a.mark()
+	if !a.committed {
+		a.committed = true
 		a.Tx.Rollback()
 	}
 }
 
 func (a *ServicePackage) Commit() {
-	if !a.committed() {
-		a.mark()
+	if !a.committed {
+		a.committed = true
 		a.Tx.Commit()
 	}
 }
