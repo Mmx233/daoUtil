@@ -95,6 +95,7 @@ func (ServicePackage) Begin(a interface{}, key string) ServicePackage {
 	var name string
 	if a != nil {
 		name = reflect.TypeOf(a).Elem().Name() + "-" + key
+		serviceLocks.Lock(name)
 	}
 	tx := Begin()
 	return ServicePackage{
@@ -112,20 +113,22 @@ func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
 	}
 }
 
-// RollBack 回滚，使用行锁时必须defer
-func (a *ServicePackage) RollBack() {
+func (a *ServicePackage) end(e func() *gorm.DB) {
+	if a.committed {
+		return
+	}
 	if a.name != "" {
 		serviceLocks.UnLock(a.name)
 	}
-	if !a.committed {
-		a.committed = true
-		a.Tx.Rollback()
-	}
+	a.committed = true
+	e()
+}
+
+// RollBack 回滚，使用行锁时必须defer
+func (a *ServicePackage) RollBack() {
+	a.end(a.Tx.Rollback)
 }
 
 func (a *ServicePackage) Commit() {
-	if !a.committed {
-		a.committed = true
-		a.Tx.Commit()
-	}
+	a.end(a.Tx.Commit)
 }
