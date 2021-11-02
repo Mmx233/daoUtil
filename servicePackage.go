@@ -42,7 +42,7 @@ func (a *serviceLock) worker() {
 				a.timeStack.Remove(e)
 				e = a.timeStack.PushBack(&delLockInfo{Name: n, Time: time.Now()})
 			}
-			a.listLock.Lock()
+			a.listLock.Unlock()
 			a.times.Store(n, e)
 		}
 	}()
