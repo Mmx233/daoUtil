@@ -89,6 +89,12 @@ type ServicePackage struct {
 	Tx        *gorm.DB
 	name      string
 	committed bool
+	binds     []servicePackageInterface
+}
+
+type servicePackageInterface interface {
+	RollBack()
+	Commit()
 }
 
 func (ServicePackage) Begin(a interface{}, key string) ServicePackage {
@@ -113,22 +119,36 @@ func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
 	}
 }
 
-func (a *ServicePackage) end(e func() *gorm.DB) {
+func (a *ServicePackage) end(e func()) {
 	if a.committed {
 		return
 	}
+	a.committed = true
+	e()
 	if a.name != "" {
 		serviceLocks.UnLock(a.name)
 	}
-	a.committed = true
-	e()
+}
+
+func (a *ServicePackage) Bind(i servicePackageInterface) {
+	a.binds = append(a.binds, i)
 }
 
 // RollBack 回滚，使用行锁时必须defer
 func (a *ServicePackage) RollBack() {
-	a.end(a.Tx.Rollback)
+	a.end(func() {
+		a.Tx.Rollback()
+		for _, v := range a.binds {
+			v.RollBack()
+		}
+	})
 }
 
 func (a *ServicePackage) Commit() {
-	a.end(a.Tx.Commit)
+	a.end(func() {
+		a.Tx.Commit()
+		for _, v := range a.binds {
+			v.Commit()
+		}
+	})
 }
