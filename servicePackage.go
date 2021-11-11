@@ -18,7 +18,9 @@ func (ServicePackage) Begin(model modelInterface) (*ServicePackage, error) {
 	if e != nil {
 		return nil, e
 	}
-	e = model.Lock(tx)
+	if model != nil {
+		e = model.Lock(tx)
+	}
 	return &ServicePackage{
 		Tx: tx,
 	}, e
