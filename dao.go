@@ -4,8 +4,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func Begin() *gorm.DB {
-	return c.DB.Begin()
+func Begin() (*gorm.DB, error) {
+	tx := c.DB.Begin()
+	return tx, tx.Error
 }
 
 func DefaultInsert(a interface{}) error {

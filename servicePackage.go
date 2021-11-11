@@ -1,154 +1,51 @@
 package daoUtil
 
 import (
-	"container/list"
 	"gorm.io/gorm"
-	"reflect"
-	"sync"
-	"time"
 )
 
-func init() {
-	go serviceLocks.worker()
-}
-
-type serviceLock struct {
-	locks     sync.Map
-	renewChan chan string
-	times     sync.Map
-	timeStack list.List
-	listLock  sync.Mutex
-}
-
-var serviceLocks = serviceLock{
-	renewChan: make(chan string, 1),
-}
-
-type delLockInfo struct {
-	Name string
-	Time time.Time
-}
-
-func (a *serviceLock) worker() {
-	go func() {
-		for {
-			n := <-a.renewChan
-			var e *list.Element
-			a.listLock.Lock()
-			if i, ok := a.times.Load(n); !ok {
-				e = a.timeStack.PushBack(&delLockInfo{Name: n, Time: time.Now()})
-			} else {
-				e = i.(*list.Element)
-				a.timeStack.Remove(e)
-				e = a.timeStack.PushBack(&delLockInfo{Name: n, Time: time.Now()})
-			}
-			a.listLock.Unlock()
-			a.times.Store(n, e)
-		}
-	}()
-
-	go func() {
-		var s time.Duration
-		for {
-			a.listLock.Lock()
-			e := a.timeStack.Front()
-			if e == nil {
-				//GC
-				a.locks = sync.Map{}
-				a.times = sync.Map{}
-				a.listLock.Unlock()
-				time.Sleep(time.Minute * 5)
-				continue
-			}
-			info := e.Value.(*delLockInfo)
-			s = time.Minute*5 - time.Since(info.Time)
-			if s > 0 {
-				a.listLock.Unlock()
-				time.Sleep(s)
-			} else {
-				a.timeStack.Remove(e)
-				a.times.Delete(info.Name)
-				a.listLock.Unlock()
-			}
-		}
-	}()
-}
-
-func (a *serviceLock) Lock(n string) {
-	a.renewChan <- n
-	t, _ := a.locks.LoadOrStore(n, &sync.Mutex{})
-	t.(*sync.Mutex).Lock()
-}
-
-func (a *serviceLock) UnLock(n string) {
-	t, _ := a.locks.Load(n)
-	t.(*sync.Mutex).Unlock()
-}
-
 type ServicePackage struct {
-	Tx        *gorm.DB
-	name      string
-	committed bool
-	binds     []servicePackageInterface
+	Tx    *gorm.DB
+	ended bool
 }
 
-type servicePackageInterface interface {
-	RollBack()
-	Commit()
+type modelInterface interface {
+	Lock(tx *gorm.DB) error
 }
 
-func (ServicePackage) Begin(a interface{}, key string) ServicePackage {
-	var name string
-	if a != nil {
-		name = reflect.TypeOf(a).Elem().Name() + "-" + key
-		serviceLocks.Lock(name)
+func (ServicePackage) Begin(model modelInterface) (*ServicePackage, error) {
+	tx, e := Begin()
+	if e != nil {
+		return nil, e
 	}
-	tx := Begin()
-	return ServicePackage{
-		Tx:   tx,
-		name: name,
-	}
+	e = model.Lock(tx)
+	return &ServicePackage{
+		Tx: tx,
+	}, e
 }
 
-func (ServicePackage) BeginWith(tx *gorm.DB) ServicePackage {
+func (ServicePackage) BeginWith(tx *gorm.DB) *ServicePackage {
 	if tx == nil {
 		tx = c.DB
 	}
-	return ServicePackage{
+	return &ServicePackage{
 		Tx: tx,
 	}
 }
 
-func (a *ServicePackage) end(e func()) {
-	if a.committed {
-		return
+func (a *ServicePackage) end(e func() *gorm.DB) error {
+	if a.ended {
+		return nil
 	}
-	a.committed = true
-	e()
-	if a.name != "" {
-		serviceLocks.UnLock(a.name)
-	}
-}
-
-func (a *ServicePackage) Bind(i servicePackageInterface) {
-	a.binds = append(a.binds, i)
+	a.ended = true
+	return e().Error
 }
 
 // RollBack 回滚，使用行锁时必须defer
-func (a *ServicePackage) RollBack() {
-	a.end(func() {
-		a.Tx.Rollback()
-		for _, v := range a.binds {
-			v.RollBack()
-		}
-	})
+func (a *ServicePackage) RollBack() error {
+	return a.end(a.Tx.Rollback)
 }
 
-func (a *ServicePackage) Commit() {
-	a.end(func() {
-		a.Tx.Commit()
-		for _, v := range a.binds {
-			v.Commit()
-		}
-	})
+func (a *ServicePackage) Commit() error {
+	return a.end(a.Tx.Commit)
 }
