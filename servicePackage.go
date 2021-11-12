@@ -20,6 +20,9 @@ func (ServicePackage) Begin(model modelInterface) (*ServicePackage, error) {
 	}
 	if model != nil {
 		e = model.Lock(tx)
+		if e != nil {
+			tx.Rollback()
+		}
 	}
 	return &ServicePackage{
 		Tx: tx,
