@@ -38,7 +38,7 @@ func (ServicePackage) BeginWith(tx *gorm.DB) *ServicePackage {
 	}
 }
 
-func (ServicePackage) LockAndBeginWith(tx *gorm.DB, model modelInterface) (*ServicePackage, error) {
+func (ServicePackage) LockWith(tx *gorm.DB, model modelInterface) (*ServicePackage, error) {
 	return &ServicePackage{
 		Tx: tx,
 	}, model.Lock(tx)
