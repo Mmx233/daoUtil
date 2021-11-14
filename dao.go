@@ -2,6 +2,7 @@ package daoUtil
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func Begin() (*gorm.DB, error) {
@@ -69,5 +70,5 @@ func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 }
 
 func DefaultLock(tx *gorm.DB, t interface{}) error {
-	return tx.Set("gorm:query_option", "FOR UPDATE").Find(t).Error
+	return tx.Clauses(clause.Locking{Strength: "UPDATE"}).Find(t).Error
 }
