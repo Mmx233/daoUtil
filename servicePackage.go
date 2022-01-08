@@ -61,7 +61,7 @@ func (a *ServicePackage) end(success bool) error {
 	} else {
 		e = a.Tx.Rollback().Error
 	}
-	success = success && e != nil
+	success = success && e == nil
 	for _, e := range a.es {
 		e(success)
 	}
