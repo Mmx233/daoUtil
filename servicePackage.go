@@ -11,23 +11,24 @@ type ServicePackage struct {
 }
 
 type modelInterface interface {
-	Lock(tx *gorm.DB) error
+	Lock(tx *gorm.DB) (bool, error)
 }
 
-func (ServicePackage) Begin(model modelInterface) (*ServicePackage, error) {
+func (ServicePackage) Begin(model modelInterface) (*ServicePackage, bool, error) {
 	tx, e := Begin()
 	if e != nil {
-		return nil, e
+		return nil, false, e
 	}
+	var ok bool
 	if model != nil {
-		e = model.Lock(tx)
+		ok, e = model.Lock(tx)
 		if e != nil {
 			tx.Rollback()
 		}
 	}
 	return &ServicePackage{
 		Tx: tx,
-	}, e
+	}, ok, e
 }
 
 func (ServicePackage) BeginWith(tx *gorm.DB) *ServicePackage {
@@ -39,10 +40,11 @@ func (ServicePackage) BeginWith(tx *gorm.DB) *ServicePackage {
 	}
 }
 
-func (ServicePackage) LockWith(tx *gorm.DB, model modelInterface) (*ServicePackage, error) {
+func (ServicePackage) LockWith(tx *gorm.DB, model modelInterface) (*ServicePackage, bool, error) {
+	ok, e := model.Lock(tx)
 	return &ServicePackage{
 		Tx: tx,
-	}, model.Lock(tx)
+	}, ok, e
 }
 
 // Hook 添加在事务结束时执行的函数
