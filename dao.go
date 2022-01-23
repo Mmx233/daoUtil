@@ -69,6 +69,7 @@ func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 	return n, tx.Model(t).Where(t).Count(&n).Error
 }
 
-func DefaultLock(tx *gorm.DB, t interface{}) error {
-	return tx.Clauses(clause.Locking{Strength: "UPDATE"}).Find(t).Error
+func DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
+	var r bool
+	return r, tx.Select("1").Where(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
 }
