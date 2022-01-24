@@ -74,7 +74,7 @@ func DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
 	return r, tx.Select("1").Model(t).Where(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
 }
 
-func MultiLock(tx *gorm.DB, t interface{}, where func(tx *gorm.DB) *gorm.DB) (bool, error) {
+func MultiLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
-	return r, where(tx.Select("1").Model(t)).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
+	return r, tx.Model(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
 }
