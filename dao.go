@@ -71,10 +71,10 @@ func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 
 func DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
-	return r, tx.Select("1").Where(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
+	return r, tx.Select("1").Model(t).Where(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
 }
 
-func MultiLock(tx *gorm.DB, where func(tx *gorm.DB) *gorm.DB) (bool, error) {
+func MultiLock(tx *gorm.DB, t interface{}, where func(tx *gorm.DB) *gorm.DB) (bool, error) {
 	var r bool
-	return r, where(tx.Select("1")).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
+	return r, where(tx.Select("1").Model(t)).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
 }
