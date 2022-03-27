@@ -14,6 +14,15 @@ func (s *DaoUtil) Begin() (*gorm.DB, error) {
 	return tx, tx.Error
 }
 
+func (s *DaoUtil) BeginServicePackage(p Service) (Service, error) {
+	tx := s.DB.Begin()
+	if tx.Error != nil {
+		return p, tx.Error
+	}
+	p.fill(tx)
+	return p, nil
+}
+
 func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
 	return tx.Session(&gorm.Session{
 		PrepareStmt: true,
