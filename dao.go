@@ -5,82 +5,86 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func Begin() (*gorm.DB, error) {
-	tx := c.DB.Begin()
+type DaoUtil struct {
+	DB *gorm.DB
+}
+
+func (s *DaoUtil) Begin() (*gorm.DB, error) {
+	tx := s.DB.Begin()
 	return tx, tx.Error
 }
 
-func EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
+func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
 	return tx.Session(&gorm.Session{
 		PrepareStmt: true,
 	})
 }
 
-func DefaultInsert(a interface{}) error {
-	return DefaultInsertTx(c.DB, a)
+func (s *DaoUtil) DefaultInsert(a interface{}) error {
+	return s.DefaultInsertTx(s.DB, a)
 }
 
-func DefaultInsertTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultInsertTx(tx *gorm.DB, a interface{}) error {
 	return tx.Create(a).Error
 }
 
-func DefaultDelete(a interface{}) error {
-	return DefaultDeleteTx(c.DB, a)
+func (s *DaoUtil) DefaultDelete(a interface{}) error {
+	return s.DefaultDeleteTx(s.DB, a)
 }
 
-func DefaultDeleteTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultDeleteTx(tx *gorm.DB, a interface{}) error {
 	return tx.Where(a).Delete(a).Error
 }
 
-func DefaultFind(a interface{}) error {
-	return DefaultFindTx(c.DB, a)
+func (s *DaoUtil) DefaultFind(a interface{}) error {
+	return s.DefaultFindTx(s.DB, a)
 }
 
-func DefaultFindTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultFindTx(tx *gorm.DB, a interface{}) error {
 	return tx.Where(a).Find(a).Error
 }
 
-func DefaultExist(a interface{}) bool {
-	return DefaultExistTx(c.DB, a)
+func (s *DaoUtil) DefaultExist(a interface{}) bool {
+	return s.DefaultExistTx(s.DB, a)
 }
 
-func DefaultExistTx(tx *gorm.DB, a interface{}) bool {
+func (s *DaoUtil) DefaultExistTx(tx *gorm.DB, a interface{}) bool {
 	var t bool
 	tx.Model(a).Select("1").Where(a).Find(&t)
 	return t
 }
 
-func DefaultGet(a interface{}) error {
-	return DefaultGetTx(c.DB, a)
+func (s *DaoUtil) DefaultGet(a interface{}) error {
+	return s.DefaultGetTx(s.DB, a)
 }
 
-func DefaultGetTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultGetTx(tx *gorm.DB, a interface{}) error {
 	return tx.Find(a).Error
 }
 
-func DefaultGetWhitQuery(a interface{}, t interface{}) error {
-	return DefaultGetWhitQueryTx(c.DB, a, t)
+func (s *DaoUtil) DefaultGetWhitQuery(a interface{}, t interface{}) error {
+	return s.DefaultGetWhitQueryTx(s.DB, a, t)
 }
 
-func DefaultGetWhitQueryTx(tx *gorm.DB, a interface{}, t interface{}) error {
+func (s *DaoUtil) DefaultGetWhitQueryTx(tx *gorm.DB, a interface{}, t interface{}) error {
 	return tx.Where(a).Find(t).Error
 }
 
-func DefaultCounter(t interface{}) (int64, error) {
-	return DefaultCounterTx(c.DB, t)
+func (s *DaoUtil) DefaultCounter(t interface{}) (int64, error) {
+	return s.DefaultCounterTx(s.DB, t)
 }
 
-func DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
+func (s *DaoUtil) DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
 	var n int64
 	return n, tx.Model(t).Where(t).Count(&n).Error
 }
 
-func DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
+func (s *DaoUtil) DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
 	return r, tx.Select("1").Model(t).Where(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
 }
 
-func MultiLock(tx *gorm.DB, t interface{}) (bool, error) {
+func (s *DaoUtil) MultiLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
 	return r, tx.Model(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
 }

@@ -6,8 +6,8 @@ type Config struct {
 	DB *gorm.DB
 }
 
-var c *Config
-
-func Init(config *Config) {
-	c = config
+func New(config *Config) *DaoUtil {
+	return &DaoUtil{
+		DB: config.DB,
+	}
 }
