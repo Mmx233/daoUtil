@@ -10,6 +10,12 @@ func Begin() (*gorm.DB, error) {
 	return tx, tx.Error
 }
 
+func EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
+	return tx.Session(&gorm.Session{
+		PrepareStmt: true,
+	})
+}
+
 func DefaultInsert(a interface{}) error {
 	return DefaultInsertTx(c.DB, a)
 }
