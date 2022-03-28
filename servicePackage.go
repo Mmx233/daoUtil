@@ -5,9 +5,7 @@ import (
 )
 
 type ServicePackage struct {
-	Tx    *gorm.DB
-	ended bool
-	es    []func(success bool)
+	Tx *gorm.DB
 }
 
 func (a *ServicePackage) LockOrRoll(m Model) (bool, error) {
@@ -22,16 +20,23 @@ func (a *ServicePackage) fill(tx *gorm.DB) {
 	a.Tx = tx
 }
 
+func (a *ServicePackage) context() *Context {
+	c, _ := a.Tx.Get(packageKey)
+	return c.(*Context)
+}
+
 // Hook 添加在事务结束时执行的函数
 func (a *ServicePackage) Hook(e func(success bool)) {
-	a.es = append(a.es, e)
+	context := a.context()
+	context.ES = append(context.ES, e)
 }
 
 func (a *ServicePackage) end(success bool) error {
-	if a.ended {
+	context := a.context()
+	if context.Ended {
 		return nil
 	}
-	a.ended = true
+	context.Ended = true
 	var e error
 	if success {
 		e = a.Tx.Commit().Error
@@ -39,7 +44,7 @@ func (a *ServicePackage) end(success bool) error {
 		e = a.Tx.Rollback().Error
 	}
 	success = success && e == nil
-	for _, e := range a.es {
+	for _, e := range context.ES {
 		e(success)
 	}
 	return e

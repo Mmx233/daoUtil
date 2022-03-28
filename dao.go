@@ -15,7 +15,7 @@ func (s *DaoUtil) Begin() (*gorm.DB, error) {
 }
 
 func (s *DaoUtil) BeginService(p Service) (Service, error) {
-	tx := s.DB.Begin()
+	tx := s.DB.Begin().Set(packageKey, &Context{})
 	if tx.Error != nil {
 		return p, tx.Error
 	}

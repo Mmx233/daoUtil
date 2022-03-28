@@ -2,6 +2,13 @@ package daoUtil
 
 import "gorm.io/gorm"
 
+const packageKey = "DaoServicePackage"
+
+type Context struct {
+	Ended bool
+	ES    []func(success bool)
+}
+
 type Model interface {
 	Lock(tx *gorm.DB) (bool, error)
 }
