@@ -23,8 +23,11 @@ func (s *DaoUtil) BeginService(p Service) (Service, error) {
 	return p, nil
 }
 
-func (s *DaoUtil) NewServicePackage() *ServicePackage {
-	return &ServicePackage{Tx: s.DB}
+func (s *DaoUtil) NewServicePackage(tx *gorm.DB) *ServicePackage {
+	if tx == nil {
+		tx = s.DB
+	}
+	return &ServicePackage{Tx: tx}
 }
 
 func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
