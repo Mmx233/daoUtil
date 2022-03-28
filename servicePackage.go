@@ -10,6 +10,14 @@ type ServicePackage struct {
 	es    []func(success bool)
 }
 
+func (a *ServicePackage) LockOrRoll(m Model) (bool, error) {
+	ok, e := m.Lock(a.Tx)
+	if e != nil {
+		_ = a.RollBack()
+	}
+	return ok, e
+}
+
 func (a *ServicePackage) fill(tx *gorm.DB) {
 	a.Tx = tx
 }
