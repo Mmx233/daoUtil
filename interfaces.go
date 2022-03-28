@@ -8,4 +8,8 @@ type Model interface {
 
 type Service interface {
 	fill(tx *gorm.DB)
+	LockOrRoll(m Model) (bool, error)
+	Hook(e func(success bool))
+	RollBack() error
+	Commit() error
 }
