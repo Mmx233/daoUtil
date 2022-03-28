@@ -21,8 +21,7 @@ func (a *ServicePackage) fill(tx *gorm.DB) {
 }
 
 func (a *ServicePackage) context() *Context {
-	c, _ := a.Tx.Get(packageKey)
-	return c.(*Context)
+	return a.Tx.Statement.Context.Value(packageKey).(*Context)
 }
 
 // Hook 添加在事务结束时执行的函数

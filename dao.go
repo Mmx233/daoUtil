@@ -1,6 +1,7 @@
 package daoUtil
 
 import (
+	"context"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -15,7 +16,7 @@ func (s *DaoUtil) Begin() (*gorm.DB, error) {
 }
 
 func (s *DaoUtil) BeginService(p Service) (Service, error) {
-	tx := s.DB.Begin().Set(packageKey, &Context{})
+	tx := s.DB.Begin().WithContext(context.WithValue(context.Background(), packageKey, &Context{}))
 	if tx.Error != nil {
 		return p, tx.Error
 	}
