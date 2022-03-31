@@ -16,6 +16,14 @@ func (a *ServicePackage) LockOrRoll(m Model) (bool, error) {
 	return ok, e
 }
 
+func (a *ServicePackage) WithOpts(opts ...ServiceOpt) *gorm.DB {
+	tx := a.Tx
+	for _, opt := range opts {
+		tx = opt(a.Tx)
+	}
+	return tx
+}
+
 func (a *ServicePackage) fill(tx *gorm.DB) {
 	a.Tx = tx
 }
