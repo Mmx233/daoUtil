@@ -77,3 +77,14 @@ func (a *ServicePackage) RollBack() error {
 func (a *ServicePackage) Commit() error {
 	return a.end(true)
 }
+
+// Transaction 对子事务的补充，仅在非事务中使用
+func (a *ServicePackage) Transaction(e func(tx *gorm.DB) error) error {
+	tx := a.Tx.Begin()
+	defer tx.Rollback()
+	err := e(tx)
+	if err == nil {
+		return tx.Commit().Error
+	}
+	return err
+}
