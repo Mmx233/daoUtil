@@ -16,18 +16,8 @@ func (s *DaoUtil) Begin() (*gorm.DB, error) {
 
 func (s *DaoUtil) BeginService(p Service) (Service, error) {
 	tx := s.DB.Begin().WithContext(context.WithValue(context.Background(), packageKey, &Context{}))
-	if tx.Error != nil {
-		return p, tx.Error
-	}
 	p.fill(tx)
-	return p, nil
-}
-
-func (s *DaoUtil) NewServicePackage(tx *gorm.DB) *ServicePackage {
-	if tx == nil {
-		tx = s.DB
-	}
-	return &ServicePackage{Tx: tx}
+	return p, tx.Error
 }
 
 func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {

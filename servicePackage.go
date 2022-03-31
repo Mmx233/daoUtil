@@ -8,6 +8,14 @@ type ServicePackage struct {
 	Tx *gorm.DB
 }
 
+func (a *ServicePackage) NewFromTx(tx *gorm.DB) {
+	a.fill(tx)
+}
+
+func (a *ServicePackage) NewFromServ(p Service) {
+	a.fill(p.db())
+}
+
 func (a *ServicePackage) LockOrRoll(m Model) (bool, error) {
 	ok, e := m.Lock(a.Tx)
 	if e != nil {
@@ -22,6 +30,10 @@ func (a *ServicePackage) WithOpts(opts ...ServiceOpt) *gorm.DB {
 		tx = opt(a.Tx)
 	}
 	return tx
+}
+
+func (a *ServicePackage) db() *gorm.DB {
+	return a.Tx
 }
 
 func (a *ServicePackage) fill(tx *gorm.DB) {

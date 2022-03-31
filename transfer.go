@@ -14,6 +14,7 @@ type Model interface {
 }
 
 type Service interface {
+	db() *gorm.DB
 	fill(tx *gorm.DB)
 	LockOrRoll(m Model) (bool, error)
 	Hook(e func(success bool))
