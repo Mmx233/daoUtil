@@ -37,61 +37,33 @@ func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
 	})
 }
 
-func (s *DaoUtil) DefaultInsert(a interface{}) error {
-	return s.DefaultInsertTx(s.DB, a)
-}
-
-func (s *DaoUtil) DefaultInsertTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultInsert(tx *gorm.DB, a interface{}) error {
 	return tx.Create(a).Error
 }
 
-func (s *DaoUtil) DefaultDelete(a interface{}) error {
-	return s.DefaultDeleteTx(s.DB, a)
-}
-
-func (s *DaoUtil) DefaultDeleteTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultDelete(tx *gorm.DB, a interface{}) error {
 	return tx.Where(a).Delete(a).Error
 }
 
-func (s *DaoUtil) DefaultFind(a interface{}) error {
-	return s.DefaultFindTx(s.DB, a)
-}
-
-func (s *DaoUtil) DefaultFindTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultFind(tx *gorm.DB, a interface{}) error {
 	return tx.Where(a).Find(a).Error
 }
 
-func (s *DaoUtil) DefaultExist(a interface{}) bool {
-	return s.DefaultExistTx(s.DB, a)
-}
-
-func (s *DaoUtil) DefaultExistTx(tx *gorm.DB, a interface{}) bool {
+func (s *DaoUtil) DefaultExist(tx *gorm.DB, a interface{}) bool {
 	var t bool
 	tx.Model(a).Select("1").Where(a).Find(&t)
 	return t
 }
 
-func (s *DaoUtil) DefaultGet(a interface{}) error {
-	return s.DefaultGetTx(s.DB, a)
-}
-
-func (s *DaoUtil) DefaultGetTx(tx *gorm.DB, a interface{}) error {
+func (s *DaoUtil) DefaultGet(tx *gorm.DB, a interface{}) error {
 	return tx.Find(a).Error
 }
 
-func (s *DaoUtil) DefaultGetWhitQuery(a interface{}, t interface{}) error {
-	return s.DefaultGetWhitQueryTx(s.DB, a, t)
-}
-
-func (s *DaoUtil) DefaultGetWhitQueryTx(tx *gorm.DB, a interface{}, t interface{}) error {
+func (s *DaoUtil) DefaultGetWhitQuery(tx *gorm.DB, a interface{}, t interface{}) error {
 	return tx.Where(a).Find(t).Error
 }
 
-func (s *DaoUtil) DefaultCounter(t interface{}) (int64, error) {
-	return s.DefaultCounterTx(s.DB, t)
-}
-
-func (s *DaoUtil) DefaultCounterTx(tx *gorm.DB, t interface{}) (int64, error) {
+func (s *DaoUtil) DefaultCounter(tx *gorm.DB, t interface{}) (int64, error) {
 	var n int64
 	return n, tx.Model(t).Where(t).Count(&n).Error
 }
