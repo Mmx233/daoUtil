@@ -37,6 +37,10 @@ func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
 	})
 }
 
+func (s *DaoUtil) LockForUpdate(tx *gorm.DB) *gorm.DB {
+	return tx.Clauses(clause.Locking{Strength: "UPDATE"})
+}
+
 func (s *DaoUtil) DefaultInsert(tx *gorm.DB, a interface{}) error {
 	return tx.Create(a).Error
 }
@@ -70,10 +74,10 @@ func (s *DaoUtil) DefaultCounter(tx *gorm.DB, t interface{}) (int64, error) {
 
 func (s *DaoUtil) DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
-	return r, tx.Select("1").Model(t).Where(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
+	return r, s.LockForUpdate(tx).Select("1").Model(t).Where(t).Find(&r).Error
 }
 
 func (s *DaoUtil) MultiLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
-	return r, tx.Model(t).Clauses(clause.Locking{Strength: "UPDATE"}).Find(&r).Error
+	return r, s.LockForUpdate(tx).Model(t).Find(&r).Error
 }
