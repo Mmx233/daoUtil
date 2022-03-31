@@ -3,7 +3,6 @@ package daoUtil
 import (
 	"context"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type DaoUtil struct {
@@ -32,13 +31,11 @@ func (s *DaoUtil) NewServicePackage(tx *gorm.DB) *ServicePackage {
 }
 
 func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
-	return tx.Session(&gorm.Session{
-		PrepareStmt: true,
-	})
+	return EnablePrepareStmt(tx)
 }
 
 func (s *DaoUtil) LockForUpdate(tx *gorm.DB) *gorm.DB {
-	return tx.Clauses(clause.Locking{Strength: "UPDATE"})
+	return LockForUpdate(tx)
 }
 
 func (s *DaoUtil) DefaultInsert(tx *gorm.DB, a interface{}) error {

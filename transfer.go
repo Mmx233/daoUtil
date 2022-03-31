@@ -20,3 +20,5 @@ type Service interface {
 	RollBack() error
 	Commit() error
 }
+
+type ServiceOpt func(tx *gorm.DB) *gorm.DB
