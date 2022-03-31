@@ -73,8 +73,3 @@ func (s *DaoUtil) DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
 	return r, s.LockForUpdate(tx).Select("1").Model(t).Where(t).Find(&r).Error
 }
-
-func (s *DaoUtil) MultiLock(tx *gorm.DB, t interface{}) (bool, error) {
-	var r bool
-	return r, s.LockForUpdate(tx).Model(t).Find(&r).Error
-}
