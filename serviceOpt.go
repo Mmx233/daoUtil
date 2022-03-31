@@ -14,4 +14,7 @@ var (
 	LockForUpdate = ServiceOpt(func(tx *gorm.DB) *gorm.DB {
 		return tx.Clauses(clause.Locking{Strength: "UPDATE"})
 	})
+	LockForShare = ServiceOpt(func(tx *gorm.DB) *gorm.DB {
+		return tx.Clauses(clause.Locking{Strength: "SHARE"})
+	})
 )
