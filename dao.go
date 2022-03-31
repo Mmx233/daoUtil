@@ -50,10 +50,9 @@ func (s *DaoUtil) DefaultFind(tx *gorm.DB, a interface{}) error {
 	return tx.Where(a).Find(a).Error
 }
 
-func (s *DaoUtil) DefaultExist(tx *gorm.DB, a interface{}) bool {
+func (s *DaoUtil) DefaultExist(tx *gorm.DB, a interface{}) (bool, error) {
 	var t bool
-	tx.Model(a).Select("1").Where(a).Find(&t)
-	return t
+	return t, tx.Model(a).Select("1").Where(a).Find(&t).Error
 }
 
 func (s *DaoUtil) DefaultGet(tx *gorm.DB, a interface{}) error {
