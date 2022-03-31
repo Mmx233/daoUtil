@@ -20,6 +20,11 @@ func (s *DaoUtil) BeginService(p Service) (Service, error) {
 	return p, tx.Error
 }
 
+func (s *DaoUtil) NewZeroService(p Service) Service {
+	p.fill(s.DB)
+	return p
+}
+
 func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
 	return EnablePrepareStmt(tx)
 }
