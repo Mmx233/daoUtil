@@ -25,14 +25,6 @@ func (s *DaoUtil) NewZeroService(p Service) Service {
 	return p
 }
 
-func (s *DaoUtil) EnablePrepareStmt(tx *gorm.DB) *gorm.DB {
-	return EnablePrepareStmt(tx)
-}
-
-func (s *DaoUtil) LockForUpdate(tx *gorm.DB) *gorm.DB {
-	return LockForUpdate(tx)
-}
-
 func (s *DaoUtil) DefaultInsert(tx *gorm.DB, a interface{}) error {
 	return tx.Create(a).Error
 }
@@ -65,5 +57,5 @@ func (s *DaoUtil) DefaultCounter(tx *gorm.DB, t interface{}) (int64, error) {
 
 func (s *DaoUtil) DefaultLock(tx *gorm.DB, t interface{}) (bool, error) {
 	var r bool
-	return r, s.LockForUpdate(tx).Select("1").Model(t).Where(t).Find(&r).Error
+	return r, LockForUpdate(tx).Select("1").Model(t).Where(t).Find(&r).Error
 }
