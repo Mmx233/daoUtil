@@ -17,4 +17,10 @@ var (
 	LockForShare = ServiceOpt(func(tx *gorm.DB) *gorm.DB {
 		return tx.Clauses(clause.Locking{Strength: "SHARE", Table: clause.Table{Name: clause.CurrentTable}})
 	})
+	SelectAssociations = ServiceOpt(func(tx *gorm.DB) *gorm.DB {
+		return tx.Select(clause.Associations)
+	})
+	UnScoped = ServiceOpt(func(tx *gorm.DB) *gorm.DB {
+		return tx.Unscoped()
+	})
 )
