@@ -6,7 +6,8 @@ const packageKey = "DaoServicePackage"
 
 type Context struct {
 	Ended bool
-	ES    []func(success bool)
+	ES    []func() error
+	EF    []func()
 }
 
 type Model interface {
