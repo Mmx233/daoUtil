@@ -24,3 +24,10 @@ var (
 		return tx.Unscoped()
 	})
 )
+
+func TxOpts(DB *gorm.DB, opts ...ServiceOpt) *gorm.DB {
+	for _, f := range opts {
+		DB = f(DB)
+	}
+	return DB
+}
